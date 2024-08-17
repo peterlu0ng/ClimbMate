@@ -16,7 +16,18 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
+  create_enum "status", ["Going", "Maybe", "Can't Go"]
   create_enum "type", ["public", "private", "friends only"]
+
+  create_table "attendances", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "user_id", null: false
+    t.enum "attendance_status", null: false, enum_type: "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_attendances_on_event_id"
+    t.index ["user_id"], name: "index_attendances_on_user_id"
+  end
 
   create_table "events", force: :cascade do |t|
     t.string "name", default: "", null: false
@@ -37,4 +48,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
     t.datetime "updated_at", null: false
   end
 
+  add_foreign_key "attendances", "events"
+  add_foreign_key "attendances", "users"
 end
