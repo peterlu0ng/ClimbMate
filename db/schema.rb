@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_17_024535) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
+  create_enum "friendship_status", ["Friends", "Blocked"]
   create_enum "status", ["Going", "Maybe", "Can't Go"]
   create_enum "type", ["public", "private", "friends only"]
 
@@ -47,6 +48,17 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "relationships", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "friend_id", null: false
+    t.enum "friendship", null: false, enum_type: "friendship_status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["friend_id"], name: "index_relationships_on_friend_id"
+    t.index ["user_id", "friend_id"], name: "index_relationships_on_user_id_and_friend_id", unique: true
+    t.index ["user_id"], name: "index_relationships_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -58,4 +70,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
 
   add_foreign_key "attendances", "events"
   add_foreign_key "attendances", "users"
+  add_foreign_key "relationships", "users"
+  add_foreign_key "relationships", "users", column: "friend_id"
 end
