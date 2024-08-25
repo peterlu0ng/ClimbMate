@@ -14,32 +14,29 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  # Custom types defined in this database.
-  # Note that some types may not work with other database engines. Be careful if changing database.
-  create_enum "status", ["Going", "Maybe", "Can't Go"]
-  create_enum "type", ["public", "private", "friends only"]
-
-  create_table "attendances", force: :cascade do |t|
-    t.bigint "event_id", null: false
-    t.bigint "user_id", null: false
-    t.enum "attendance_status", null: false, enum_type: "status"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+  create_table "attendances", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "event_id", null: false
+    t.uuid "user_id", null: false
+    t.integer "attendance_status", null: false
     t.index ["event_id"], name: "index_attendances_on_event_id"
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
-  create_table "events", force: :cascade do |t|
+  create_table "events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", default: "", null: false
     t.string "description"
-    t.enum "event_type", null: false, enum_type: "type"
+    t.integer "status", null: false
     t.datetime "open_time"
     t.datetime "close_time"
+    t.uuid "gym_id"
+    t.uuid "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["gym_id"], name: "index_events_on_gym_id"
+    t.index ["user_id"], name: "index_events_on_user_id"
   end
 
-  create_table "gyms", force: :cascade do |t|
+  create_table "gyms", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", default: "", null: false
     t.string "address", default: "", null: false
     t.jsonb "operating_hours", default: {}, null: false
@@ -47,15 +44,17 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "users", force: :cascade do |t|
-    t.string "email", default: "", null: false
-    t.string "encrypted_password", default: "", null: false
-    t.string "username", null: false
+  create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
+    t.string "email", default: "", null: false
+    t.string "username", null: false
+    t.string "encrypted_password", default: "", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  add_foreign_key "attendances", "events"
-  add_foreign_key "attendances", "users"
+  add_foreign_key "attendances", "events", on_delete: :cascade
+  add_foreign_key "attendances", "users", on_delete: :cascade
+  add_foreign_key "events", "gyms", on_delete: :cascade
+  add_foreign_key "events", "users", on_delete: :cascade
 end
