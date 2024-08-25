@@ -10,66 +10,62 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 20_240_817_024_535) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_17_024535) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension 'plpgsql'
+  enable_extension "plpgsql"
 
-  # Custom types defined in this database.
-  # Note that some types may not work with other database engines. Be careful if changing database.
-  create_enum 'friendship_status', %w[Friends Blocked]
-  create_enum 'status', ['Going', 'Maybe', "Can't Go"]
-  create_enum 'type', ['public', 'private', 'friends only']
-
-  create_table 'attendances', force: :cascade do |t|
-    t.bigint 'event_id', null: false
-    t.bigint 'user_id', null: false
-    t.enum 'attendance_status', null: false, enum_type: 'status'
-    t.datetime 'created_at', null: false
-    t.datetime 'updated_at', null: false
-    t.index ['event_id'], name: 'index_attendances_on_event_id'
-    t.index ['user_id'], name: 'index_attendances_on_user_id'
+  create_table "attendances", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "event_id", null: false
+    t.uuid "user_id", null: false
+    t.integer "attendance_status", null: false
+    t.index ["event_id"], name: "index_attendances_on_event_id"
+    t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
-  create_table 'events', force: :cascade do |t|
-    t.string 'name', default: '', null: false
-    t.string 'description'
-    t.enum 'event_type', null: false, enum_type: 'type'
-    t.datetime 'open_time'
-    t.datetime 'close_time'
-    t.datetime 'created_at', null: false
-    t.datetime 'updated_at', null: false
+  create_table "events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "name", default: "", null: false
+    t.string "description"
+    t.integer "status", null: false
+    t.datetime "open_time"
+    t.datetime "close_time"
+    t.uuid "gym_id"
+    t.uuid "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gym_id"], name: "index_events_on_gym_id"
+    t.index ["user_id"], name: "index_events_on_user_id"
   end
 
-  create_table 'gyms', force: :cascade do |t|
-    t.string 'name', default: '', null: false
-    t.string 'address', default: '', null: false
-    t.jsonb 'operating_hours', default: {}, null: false
-    t.datetime 'created_at', null: false
-    t.datetime 'updated_at', null: false
+  create_table "gyms", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "name", default: "", null: false
+    t.string "address", default: "", null: false
+    t.jsonb "operating_hours", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
-  create_table 'relationships', force: :cascade do |t|
-    t.bigint 'user_id', null: false
-    t.bigint 'friend_id', null: false
-    t.enum 'friendship', null: false, enum_type: 'friendship_status'
-    t.datetime 'created_at', null: false
-    t.datetime 'updated_at', null: false
-    t.index ['friend_id'], name: 'index_relationships_on_friend_id'
-    t.index %w[user_id friend_id], name: 'index_relationships_on_user_id_and_friend_id', unique: true
-    t.index ['user_id'], name: 'index_relationships_on_user_id'
+  create_table "relationships", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_a_id", null: false
+    t.uuid "user_b_id", null: false
+    t.integer "status", null: false
+    t.index ["user_a_id", "user_b_id"], name: "index_relationships_on_user_a_id_and_user_b_id", unique: true
+    t.index ["user_a_id"], name: "index_relationships_on_user_a_id"
+    t.index ["user_b_id"], name: "index_relationships_on_user_b_id"
   end
 
-  create_table 'users', force: :cascade do |t|
-    t.string 'email', default: '', null: false
-    t.string 'encrypted_password', default: '', null: false
-    t.string 'username', null: false
-    t.string 'name', null: false
-    t.datetime 'created_at', null: false
-    t.datetime 'updated_at', null: false
+  create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "name", null: false
+    t.string "email", default: "", null: false
+    t.string "username", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
-  add_foreign_key 'attendances', 'events'
-  add_foreign_key 'attendances', 'users'
-  add_foreign_key 'relationships', 'users'
-  add_foreign_key 'relationships', 'users', column: 'friend_id'
+  add_foreign_key "attendances", "events", on_delete: :cascade
+  add_foreign_key "attendances", "users", on_delete: :cascade
+  add_foreign_key "events", "gyms", on_delete: :cascade
+  add_foreign_key "events", "users", on_delete: :cascade
+  add_foreign_key "relationships", "users", column: "user_a_id"
+  add_foreign_key "relationships", "users", column: "user_b_id"
 end
