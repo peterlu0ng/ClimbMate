@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_17_024535) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -44,6 +44,15 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "relationships", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_a_id", null: false
+    t.uuid "user_b_id", null: false
+    t.integer "status", null: false
+    t.index ["user_a_id", "user_b_id"], name: "index_relationships_on_user_a_id_and_user_b_id", unique: true
+    t.index ["user_a_id"], name: "index_relationships_on_user_a_id"
+    t.index ["user_b_id"], name: "index_relationships_on_user_b_id"
+  end
+
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
     t.string "email", default: "", null: false
@@ -57,4 +66,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_15_004215) do
   add_foreign_key "attendances", "users", on_delete: :cascade
   add_foreign_key "events", "gyms", on_delete: :cascade
   add_foreign_key "events", "users", on_delete: :cascade
+  add_foreign_key "relationships", "users", column: "user_a_id"
+  add_foreign_key "relationships", "users", column: "user_b_id"
 end
